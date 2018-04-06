@@ -29,6 +29,12 @@ let animalUrl = "./images/" + animal;
 import(animalUrl).then(img => ...);
 ```
 
+This is a good feature to have, but it does cause problems for bundlers, type
+checkers, linters, and other tools that rely on static analysis to find module
+dependencies.
+
+For example, with the above examples it is extreme
+
 ## `import.meta.url("./path")`
 
 ```js
@@ -39,12 +45,42 @@ let animalUrl = Math.random() ? puppiesUrl : kittiesUrl;
 import(animalUrl).then(img => ...);
 ```
 
+**Desugared:**
+
+```js
+let puppiesUrl = "./images/puppies.jpg";
+let kittiesUrl = "./images/kitties.jpg";
+let animalUrl = Math.random() ? puppiesUrl : kittiesUrl;
+
+import(animalUrl).then(img => ...);
+```
+
 ## `import.meta.glob("./glob/*")`
 
 ```js
 let getImageUrl = import.meta.glob("./images/*");
 let animal = Math.random() ? "puppies" : "kitties";
-let animalUrl = getImageUrl("./images/" + animal);
+let animalUrl = getImageUrl(`./images/${animal}`);
+
+import(animalUrl).then(img => ...);
+```
+
+**Desugared:**
+
+```js
+function __importMetaGlob(glob, regex) {
+  return url => {
+    if (regex.test(url)) {
+      return url;
+    } else {
+      throw new Error(`${url} does not match ${glob}`);
+    }
+  };
+}
+
+let getImageUrl = __importMetaGlob("./images/*", /^\.\/images\/([^/]*)$/);
+let animal = Math.random() ? "puppies" : "kitties";
+let animalUrl = getImageUrl(`./images/${animal}`);
 
 import(animalUrl).then(img => ...);
 ```
