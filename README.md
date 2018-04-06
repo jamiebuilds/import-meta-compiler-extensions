@@ -33,7 +33,12 @@ This is a good feature to have, but it does cause problems for bundlers, type
 checkers, linters, and other tools that rely on static analysis to find module
 dependencies.
 
-For example, with the above examples it is extreme
+For example, with the above examples it is difficult to reliably determine
+which modules are going to be imported and there are even more situations where
+it is impossible altogether.
+
+We need a way in JavaScript to describe dependencies without immediately
+importing them.
 
 ## `import.meta.url("./path")`
 
@@ -84,3 +89,21 @@ let animalUrl = getImageUrl(`./images/${animal}`);
 
 import(animalUrl).then(img => ...);
 ```
+
+## Alternatives
+
+### `() => import("./path")`
+
+Today the easiest way to create static dependencies without immediately
+importing them is to wrap them in a function.
+
+```js
+let importPuppies = () => import("./images/puppies.jpg");
+let importKitties = () => import("./images/kitties.jpg");
+let importAnimal = Math.random() > 0.5 ? importPuppies : importKitties;
+
+importAnimal().then(img => ...);
+```
+
+This works okay for the `import.meta.url` case, but doesn't solve the
+`import.meta.glob` case.
